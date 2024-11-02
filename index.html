@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Image Blog</h1>
+    <h2>Blog Count:<span id="blogCount">0</span></h2>
+    <form onsubmit="imageBlog(event)">
+        <label>Image URL</label>
+        <input type="url" name="url" id="urlTag"><br><br>
+        <label>Title</label>
+        <input type="text" name="title" id="titleTag"><br><br>
+        <label>Description</label>
+        <input type="text" name="description" id="descriptionTag">
+        <button>Submit</button>
+    </form>
+    <ul id="listOfItems"></ul>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
+    <script>
+         let blogCount=0;
+
+         function updateblogCount(){
+            document.getElementById("blogCount").textContent=blogCount;
+         }
+
+         function imageBlog(event){
+            event.preventDefault();
+            const url=event.target.url.value;
+            const title=event.target.title.value;
+            const description=event.target.description.value;
+
+            const obj={
+                url,
+                title,
+                description
+            }
+
+            axios.post("https://crudcrud.com/api/9a6d95a6404145bd953630acfbaac9cb/imageBlog",obj)
+            .then(value=>{
+                displayUserOnScreen(value.data);
+                blogCount++;
+                updateblogCount();
+            })
+            .catch(error=>{
+                console.log(error)
+            })
+         }
+
+         function displayUserOnScreen(user){
+            document.getElementById("urlTag").value="";
+            document.getElementById("titleTag").value="";
+            document.getElementById("descriptionTag").value="";
+
+            const parentElement=document.getElementById("listOfItems");
+            const childElement=`<li id=${user._id}><img src="${user.url}" 
+                                alt="${user.title}" style="width: 200px;  height: auto;">
+                                <h3>${user.title}</h3>
+                                <p>${user.description}</p>
+                                <button onclick="deleteObj('${user._id}')">Delete</button>
+                                <button onclick="editObj('${user.url}','${user.title}','${user.description}','${user._id}')">Edit</button>
+                                </li>`
+            parentElement.innerHTML+=childElement;                    
+         }
+
+         function deleteObj(userId){
+            axios.delete(`https://crudcrud.com/api/9a6d95a6404145bd953630acfbaac9cb/imageBlog/${userId}`)
+            .then(value=>{
+                removeUserFromScreen(userId);
+                blogCount--;
+                updateblogCount();
+            })
+            .catch(error=>{
+                console.log(error)
+            }) 
+         }
+
+         function removeUserFromScreen(userId){
+            const parentElement=document.getElementById("listOfItems");
+            const childElementToBeDeleted=document.getElementById(userId);
+            parentElement.removeChild(childElementToBeDeleted);
+         }
+
+         function editObj(url,title,description,userId){
+            document.getElementById("urlTag").value=url;
+            document.getElementById("titleTag").value=title;
+            document.getElementById("descriptionTag").value=description;
+
+            deleteObj(userId);
+         }
+
+         window.addEventListener("DOMContentLoaded",()=>{
+            axios.get("https://crudcrud.com/api/9a6d95a6404145bd953630acfbaac9cb/imageBlog")
+                  .then(value=>{
+                    for(var i=0;i<value.data.length;i++){
+                        displayUserOnScreen(value.data[i]);
+                        blogCount++;
+                    }
+                    updateblogCount();
+                  })
+                  .catch(error=>{
+                    console.log(error)
+                  })
+         })
+
+         
+    </script>
+</body>
+</html>
